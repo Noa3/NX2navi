@@ -153,6 +153,16 @@ def run_cfg_test(tmp):
 #include "cfg.h"
 #include "host.h"
 #include "platform/platform.h"
+#include "dispatch.h"
+#include "debug_tools.h"
+static int registrations;
+void dbg_freecam_host(Cpu *c) { (void)c; assert(0); }
+void rt_register_host(uint64_t addr, GuestFn fn) {
+    assert(addr == 0x10000 + 0xf70 && fn == dbg_freecam_host); registrations++;
+}
+void perf_size(PerfSizes *s, const char *name, uint64_t count, uint64_t limit, uint64_t bytes) {
+    (void)s; (void)name; (void)count; (void)limit; (void)bytes;
+}
 void rt_log(const char *fmt, ...) { (void)fmt; }
 void rt_fatal(const char *fmt, ...) { (void)fmt; abort(); }
 void plat_mutex_lock(PlatMutex *m) { (void)m; }
@@ -180,6 +190,7 @@ static void active(const char *key, const char *value, int from_env, void *ctx) 
 }
 int main(int argc, char **argv) {
     assert(argc == 3); const char *key = "NX2NAVI_CHEAT_RUPEES_REFILL";
+    assert(registrations == 1);
     int stage = atoi(argv[2]);
     const CfgMeta *m = cfg_meta(key);
     assert(m && !strcmp(m->def, "0") && !strcmp(m->values, "0|1") && m->live);
